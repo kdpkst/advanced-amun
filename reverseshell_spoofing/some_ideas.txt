@@ -1,0 +1,2 @@
+1. try nc.traditional, some people said this version of netcat supports "-e".(it is better to use netcat to spawn a shell!!!)
+2. before remove the docker container, we have to record all attacker's data.

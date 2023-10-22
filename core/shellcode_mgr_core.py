@@ -21,7 +21,7 @@ from hashlib import md5
 from os import path as ospath
 from socket import inet_ntoa
 from struct import pack, unpack
-from base64 import decodestring, b64encode
+from base64 import decodestring, b64encode, b64decode
 
 from sys import exit, stdout
 from StringIO import StringIO
@@ -93,7 +93,7 @@ class shell_mgr:
 		displayShellcode -- if True will display each type of shellcode that is tested
 
 		"""
-		try:
+		try:		        
 			self.shellcode = str(vulnResult['shellcode']).replace('\0','').strip()
 			self.shellcode2 = str(vulnResult['shellcode']).strip()
 			self.attIP = attIP
@@ -791,6 +791,33 @@ class shell_mgr:
 				dec_shellcode = self.decrypt_xor(key, self.shellcode)
 				if self.handle_bergheim(key, dec_shellcode):
 					return True
+		        ### Match Metsploit payload generic/shell_reverse_tcp for exploit multi/http/php_cgi_arg_injection
+		        if self.displayShellCode:
+				print "starting php_cgi_arg_injection connback matching ..."
+				stdout.flush()
+			match = self.decodersDict['php_cgi_arg_injection_connback'].search( self.shellcode2 )
+			if match:
+			        encoded = match.groups()[0]
+			        decoded = b64decode(encoded).decode()
+			        match = self.decodersDict['php_cgi_arg_injection_connback_base64'].search(decoded)
+			        if match:
+			        	ip = match.groups()[0]
+					if self.replace_locals and self.check_local(ip):
+						ip = self.attIP
+					elif self.check_local(ip):
+						self.resultSet['isLocalIP'] = True
+					port = match.groups()[1]
+					self.log_obj.log("found phpcgiarginjection connectback (ip: %s, port: %s)" % (ip, port), 9, "info", False, True)
+					dlident = "%s%s" % (ip.replace('.',''), port)
+					self.resultSet['dlident'] = dlident
+					self.resultSet['result'] = True
+					self.resultSet['host'] = ip
+					self.resultSet['port'] = port
+					self.resultSet['found'] = "connbackshell"
+					cbackURL = "cbacks://%s:%s/" % (ip, port)
+					self.resultSet['displayURL'] = cbackURL
+					self.resultSet['shellcodeName'] = "phpcgiarginjection"
+					return True
 			### End
 			self.resultSet['result'] = False
 		except KeyboardInterrupt:
@@ -801,7 +828,7 @@ class shell_mgr:
 			print f.getvalue()
 			exit(0)
 		return False
-
+		
 	def handle_alphaupper(self, decoder, payload):
 		"""Metasploit Alpha_Upper shellcode obfuscation technique
 
@@ -831,7 +858,6 @@ class shell_mgr:
 					break
 				decodedMessage[edx] = pack('B', (0xff&(unpack('B', decodedMessage[ecx])[0]*0x10)^unpack('B', decodedMessage[ecx+1])[0]))
 			dec_shellcode = "".join(decodedMessage)
-
 			m1 = self.decodersDict['alphaupper_bindport'].search( dec_shellcode )
 			m2 = self.decodersDict['alphaupper_connback'].search( dec_shellcode )
 			if m1 or m2:
@@ -842,7 +868,6 @@ class shell_mgr:
 			edx = initedx
 			if edx>=messageSize:
 				break
-
 		if m1:
 			raw_port = m1.groups()[0]
 			port = unpack('!H',raw_port)[0]
@@ -1807,6 +1832,7 @@ class shell_mgr:
 			filename = "hexdumps/%s-%s-%s.hex" % (extension.strip(), digest, ownPort)
 		else:
 			filename = "hexdumps/%s-%s.hex" % (digest, ownPort)
+			
 		### write hexdump to disc
 		if not ospath.exists(filename):
 			try:
@@ -1818,7 +1844,7 @@ class shell_mgr:
 				self.log_obj.log("(%s) failed writing hexdump (%s) (%s :%s) - %s" % (self.attIP, e, digest, len(file_data), self.resultSet['vulnname']), 9, "crit", True, True)
 				return False
 		return True
-
+		
 	def match_direct_file(self, dec_shellcode=None):
 		"""Check if given shellcode is an executable file
 

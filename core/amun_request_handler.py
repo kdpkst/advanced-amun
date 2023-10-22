@@ -27,7 +27,9 @@ import hashlib
 import os
 import random
 import struct
+import subprocess
 from copy import copy
+
 
 ### core modules
 import shellcode_mgr_core
@@ -322,94 +324,15 @@ class amun_reqhandler(asynchat.async_chat):
                 ### update connection entry
                 self.update_existing_connection(vuln_modulList)
                 self.set_new_socket_connection()
-                ### check for shellcode and start download manager
-                if result['shellresult'] != "None":
-                    for resEntry in result['shellresult']:
-                        if resEntry['result']:
-                            for key in vuln_modulList.keys():
-                                del vuln_modulList[key]
-                            ### create exploit event
-                            event_item = (self.remote_ip,
-                                          self.remote_port,
-                                          self.own_ip,
-                                          self.own_port,
-                                          result['vuln_modul'],
-                                          int(time.time()),
-                                          resEntry)
-                            if not self.event_dict['exploit'].has_key(self.identifier):
-                                self.event_dict['exploit'][self.identifier] = event_item
-                            ### attach to download list
-                            self.handle_download(resEntry)
-                            ### attach to successful exploit list
-                            if self.blocksucexpl == 1:
-                                item_id = str(self.remote_ip)
-                                self.event_dict['sucexpl_connections'][item_id] = int(time.time())
-                            try:
-                                self.socket_object.send("\r\n")
-                            except socket.error, e:
-                                pass
-                            self.delete_existing_connection()
-                            try:
-                                self.shutdown(socket.SHUT_RDWR)
-                            except:
-                                pass
-                            self.connected = False
-                            self.close()
-                            return
-                        else:
-                            ### failed to determine shellcode
-                            for key in vuln_modulList.keys():
-                                del vuln_modulList[key]
-                            ### create failed exploit event
-                            event_item = (self.remote_ip,
-                                          self.remote_port,
-                                          self.own_ip,
-                                          self.own_port,
-                                          result['vuln_modul'],
-                                          int(time.time()),
-                                          resEntry)
-                            if not self.event_dict['exploit'].has_key(self.identifier):
-                                self.event_dict['exploit'][self.identifier] = event_item
-                            ### attach to successful exploit list
-                            if self.blocksucexpl == 1:
-                                item_id = str(self.remote_ip)
-                                self.event_dict['sucexpl_connections'][item_id] = int(time.time())
-                            try:
-                                self.socket_object.send("\r\n")
-                            except socket.error, e:
-                                pass
-                            self.delete_existing_connection()
-                            try:
-                                self.shutdown(socket.SHUT_RDWR)
-                            except:
-                                pass
-                            self.connected = False
-                            self.close()
-                            return
-                ### send replies to the attacker
-                try:
-                    # if len(result['replies'])>0:
-                    for index in range(0, len(result['replies'])):
-                        reply_message = result['replies'][index]
-                        ### calc reply message length
-                        bytesTosend = len(reply_message)
-                        try:
-                            while bytesTosend > 0:
-                                bytes_send = self.socket_object.send(reply_message)
-                                bytesTosend = bytesTosend - bytes_send
-                        except socket.error, e:
-                            ### client gone
-                            self.delete_existing_connection()
-                            try:
-                                self.shutdown(socket.SHUT_RDWR)
-                            except:
-                                pass
-                            self.connected = False
-                            self.close()
-                            return
-                except:
-                    pass
 
+		# reverse shell spoofing
+		if result['shellresult'] != "None" and len(result['shellresult']) != 0:
+		    resultSet = result['shellresult'][0]
+		    if resultSet['found'] == 'connbackshell':
+			connback_ip = resultSet['host']
+			connback_port = resultSet['port']
+			subprocess.call(["./reverseshell_spoofing/create_container.sh", connback_ip, connback_port])		
+			
                 ### connection finished but modules left
                 if len(vuln_modulList) > 0 and len(data) <= 0:
                     for key in vuln_modulList.keys():
@@ -553,6 +476,7 @@ class amun_reqhandler(asynchat.async_chat):
                 vuln_modul = vuln_modulList[key]
                 vulnResult = vuln_modul.incoming(data, len(data), self.remote_ip, self.divLogger['vulnerability'],
                                                  self.random_reply, self.ownIP)
+                                                 
                 ### not accepted -> remove from vuln list
                 if not vulnResult['accept']:
                     self.log_obj.log("%s leaving communication (stage: %s bytes: %s)" % (
@@ -617,6 +541,7 @@ class amun_reqhandler(asynchat.async_chat):
             print
             "Port: %s" % (self.own_port)
             raise
+   
 
     def setMyDoomShellResult(self, downURL):
         resultSet = {}

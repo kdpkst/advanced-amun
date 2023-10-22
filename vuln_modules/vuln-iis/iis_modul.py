@@ -73,7 +73,6 @@ class vuln:
 					resultSet["reply"] = "".join(self.reply)
 					self.shellcode.append(message)
 					self.stage = "SHELLCODE"
-					#resultSet["shellcode"] = "".join(self.shellcode)
 					return resultSet
 				else:
 					resultSet["reply"] = "None"
