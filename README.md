@@ -13,7 +13,7 @@
     sudo chmod +x build_image.sh
     ```
   - ```
-    ./build._image.sh
+    ./build_image.sh
     ```
   - then start the honeypot
 
