@@ -1,9 +1,0 @@
-Install docker on your machine
-
-Build docker image on your machine before running amun honeypot: sudo docker build -t spoofing:1.0.0 .
-
-Ensure that the script create_container.sh has the permission to be executed on your Linux machine: sudo chmod +x ./create_container.sh
-
-Start the honeypot 
-
-
