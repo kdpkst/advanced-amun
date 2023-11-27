@@ -20,6 +20,16 @@ Limitations of original Amun:
     ```
   - then start the honeypot
 
+ 
+## Acknowledgments
+I would like to express my heartfelt gratitude to the authors and contributors of the following open-source projects and code, which have been instrumental in the development of this project:
+
+- []()
+- []()
+- []()
+
+
+
 
 
 
