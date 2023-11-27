@@ -26,7 +26,7 @@ I would like to express my heartfelt gratitude to the authors and contributors o
 
 - [Amun](https://github.com/zeroq/amun)
 - [Cuckoo Sandbox](https://github.com/cuckoosandbox/cuckoo)
-- [Docker for Cuckoo Sandox](https://github.com/blacktop/docker-cuckoo)
+- [Docker Cuckoo Sandox](https://github.com/blacktop/docker-cuckoo)
 - [PE Converter](https://github.com/0xballistics/inject2pe)
 - ...
 
