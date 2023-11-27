@@ -24,9 +24,11 @@ Limitations of original Amun:
 ## Acknowledgments
 I would like to express my heartfelt gratitude to the authors and contributors of the following open-source projects and code, which have been instrumental in the development of this project:
 
-- []()
-- []()
-- []()
+- [Amun](https://github.com/zeroq/amun)
+- [Cuckoo Sandbox](https://github.com/cuckoosandbox/cuckoo)
+- [Docker for Cuckoo Sandox](https://github.com/blacktop/docker-cuckoo)
+- [PE Converter](https://github.com/0xballistics/inject2pe)
+- ...
 
 
 
