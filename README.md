@@ -22,7 +22,7 @@ Limitations of original Amun:
 
  
 ## Acknowledgments
-I would like to express my heartfelt gratitude to the authors and contributors of the following open-source projects and code, which have been instrumental in the development of this project:
+I would like to express my heartfelt gratitude to the contributors of the following open-source projects and code, which have been instrumental in the development of this project:
 
 - [Amun](https://github.com/zeroq/amun)
 - [Cuckoo Sandbox](https://github.com/cuckoosandbox/cuckoo)
