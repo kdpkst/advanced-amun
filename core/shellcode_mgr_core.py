@@ -791,8 +791,8 @@ class shell_mgr:
 				dec_shellcode = self.decrypt_xor(key, self.shellcode)
 				if self.handle_bergheim(key, dec_shellcode):
 					return True
-		        ### Match Metsploit payload generic/shell_reverse_tcp for exploit multi/http/php_cgi_arg_injection
-		        if self.displayShellCode:
+		    ### Match Metsploit payload generic/shell_reverse_tcp for exploit multi/http/php_cgi_arg_injection
+		    if self.displayShellCode:
 				print "starting php_cgi_arg_injection connback matching ..."
 				stdout.flush()
 			match = self.decodersDict['php_cgi_arg_injection_connback'].search( self.shellcode2 )
@@ -818,6 +818,33 @@ class shell_mgr:
 					self.resultSet['displayURL'] = cbackURL
 					self.resultSet['shellcodeName'] = "phpcgiarginjection"
 					return True
+		    ### Match Metsploit payload windows/shell/reverse_tcp for exploit exploit/windows/backupexec/name_service
+		    if self.displayShellCode:
+				print "starting veritas connback matching ..."
+				stdout.flush()
+			match = self.decodersDict['veritas_connback'].search( self.shellcode2 )
+			if match:
+				raw_ip = match.groups()[0]
+				ip = unpack('I',raw_ip)[0]
+				ip = pack('I',ip)
+				ip = inet_ntoa(ip)
+				raw_port = match.groups()[1]
+				port = unpack('!H',raw_port)[0]
+				if self.replace_locals and self.check_local(ip):
+					ip = self.attIP
+				elif self.check_local(ip):
+					self.resultSet['isLocalIP'] = True
+				self.log_obj.log("found veritas shellcode (port: %s, ip: %s)" % (port, ip), 9, "info", False, True)
+				dlident = "%s%s" % (ip.replace('.',''), port)
+				self.resultSet['dlident'] = dlident
+				self.resultSet['result'] = True
+				self.resultSet['host'] = ip
+				self.resultSet['port'] = port
+				self.resultSet['found'] = "connbackshell"
+				cbackURL = "cbacks://%s:%s/" % (ip, port)
+				self.resultSet['displayURL'] = cbackURL
+				self.resultSet['shellcodeName'] = "veritas"
+				return True
 			### End
 			self.resultSet['result'] = False
 		except KeyboardInterrupt:
