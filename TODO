@@ -1,4 +1,0 @@
-1. log all the incoming attacks when the proxy mode is enabled.
-2. backend_server.py: put constant value into a conf file.
-3. hide the backend_server.py file if attacker uses "ls".
-4. for commands like "ifconfig", "rm"... some pre-defined rules have to set.
