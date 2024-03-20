@@ -8,7 +8,7 @@ Limitations of original Amun:
 - 2.6 <= Python < 3
 - Docker
 
-## Advanced Features
+## Features Extended
 - **Proxy Mode**: enable Amun to be a proxy to forward attacking data to a backend machine, and forward the real response from the backend decoy to the attacker.
 - **Reverse Shell Spoofing**: dynamically create docker container to emulate reverse shell if the incoming shellcode aims to establish a reverse shell. Usage is as below:
   - change directory to reverseshell_spoofing and execute below commands in order.
