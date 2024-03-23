@@ -791,8 +791,8 @@ class shell_mgr:
 				dec_shellcode = self.decrypt_xor(key, self.shellcode)
 				if self.handle_bergheim(key, dec_shellcode):
 					return True
-		    ### Match Metsploit payload generic/shell_reverse_tcp for exploit multi/http/php_cgi_arg_injection
-		    if self.displayShellCode:
+		        ### Match Metsploit payload generic/shell_reverse_tcp for exploit multi/http/php_cgi_arg_injection
+		        if self.displayShellCode:
 				print "starting php_cgi_arg_injection connback matching ..."
 				stdout.flush()
 			match = self.decodersDict['php_cgi_arg_injection_connback'].search( self.shellcode2 )
@@ -807,7 +807,7 @@ class shell_mgr:
 					elif self.check_local(ip):
 						self.resultSet['isLocalIP'] = True
 					port = match.groups()[1]
-					self.log_obj.log("found phpcgiarginjection connectback (ip: %s, port: %s)" % (ip, port), 9, "info", False, True)
+					self.log_obj.log("found phpcgiarginjection connectback shellcode (port: %s, ip: %s)" % (port, ip), 9, "info", False, True)
 					dlident = "%s%s" % (ip.replace('.',''), port)
 					self.resultSet['dlident'] = dlident
 					self.resultSet['result'] = True
@@ -816,10 +816,10 @@ class shell_mgr:
 					self.resultSet['found'] = "connbackshell"
 					cbackURL = "cbacks://%s:%s/" % (ip, port)
 					self.resultSet['displayURL'] = cbackURL
-					self.resultSet['shellcodeName'] = "phpcgiarginjection"
+					self.resultSet['shellcodeName'] = "phpcgiarginjection_connback"
 					return True
-		    ### Match Metsploit payload windows/shell/reverse_tcp for exploit exploit/windows/backupexec/name_service
-		    if self.displayShellCode:
+		        ### Match Metsploit payload generic/shell_reverse_tcp for exploit/windows/backupexec/name_service
+		        if self.displayShellCode:
 				print "starting veritas connback matching ..."
 				stdout.flush()
 			match = self.decodersDict['veritas_connback'].search( self.shellcode2 )
@@ -834,7 +834,7 @@ class shell_mgr:
 					ip = self.attIP
 				elif self.check_local(ip):
 					self.resultSet['isLocalIP'] = True
-				self.log_obj.log("found veritas shellcode (port: %s, ip: %s)" % (port, ip), 9, "info", False, True)
+				self.log_obj.log("found veritas connectback shellcode (port: %s, ip: %s)" % (port, ip), 9, "info", False, True)
 				dlident = "%s%s" % (ip.replace('.',''), port)
 				self.resultSet['dlident'] = dlident
 				self.resultSet['result'] = True
@@ -843,7 +843,7 @@ class shell_mgr:
 				self.resultSet['found'] = "connbackshell"
 				cbackURL = "cbacks://%s:%s/" % (ip, port)
 				self.resultSet['displayURL'] = cbackURL
-				self.resultSet['shellcodeName'] = "veritas"
+				self.resultSet['shellcodeName'] = "veritas_connback"
 				return True
 			### End
 			self.resultSet['result'] = False

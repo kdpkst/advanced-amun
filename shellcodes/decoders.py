@@ -246,18 +246,18 @@ class decoders:
 		self.log("compiling http embedded tftp command", 0, "info")
 		self.decodersDict['cmdtftp'] = re.compile('GET /scripts/.*?/cmd.exe.*?tftp.*?%20([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})%20GET%20(.*?)%20.*?HTTP/1\.')
 	
-	    ### Metsploit payload generic/shell_reverse_tcp for exploit multi/http/php_cgi_arg_injection
+	        ### Metsploit payload generic/shell_reverse_tcp for exploit multi/http/php_cgi_arg_injection
 		self.log("compiling Metasploit payload generic/shell_reverse_tcp for exploit multi/http/php_cgi_arg_injection", 0, "info")
 		self.decodersDict['php_cgi_arg_injection_connback'] = re.compile('.*\$c = base64_decode\(\'(.*)\'\).*', re.S)
 		self.decodersDict['php_cgi_arg_injection_connback_base64'] = re.compile('.*IO::Socket::INET\(PeerAddr,"(.*):(.*)"\).*', re.S)
-
-		### Metsploit payload windows/shell/reverse_tcp for exploit exploit/windows/backupexec/name_service
-		self.log("compiling Metsploit payload windows/shell/reverse_tcp for exploit exploit/windows/backupexec/name_service", 0, "info")
-		self.decodersDict['veritas_connback'] = re.compile('.*\\xff\\xd5\\x6a\\x0a\\x68(....)\\x68\\x02\\x00(..)\\x89\\xe6\\x50\\x50\\x50\\x50.*', re.S)
+		
+		### Metsploit payload generic/shell_reverse_tcp for exploit/windows/backupexec/name_service
+		self.log("compiling Metsploit payload generic/shell_reverse_tcp for exploit/windows/backupexec/name_service", 0, "info")
+		self.decodersDict['veritas_connback'] = re.compile('.*\\xd5\\x97\\x6a\\x05\\x68(....)\\x68\\x02\\x00(..)\\x89\\xe6\\x6a\\x10\\x56\\x57.*', re.S)
 		
 		### A general expression for reverse shell
 		self.log("compiling the general form for connectback shellcode", 0, "info")
-		self.decodersDict['general_connback'] = re.compile('.*\\x68(....)\\x68\\x02\\x00(..).*', re.S)		
+		self.decodersDict['general_connback'] = re.compile('.*\\x68(....)\\x68\\x02\\x00(..).*', re.S)
 
 	def getDecoders(self):
 		return self.decodersDict
