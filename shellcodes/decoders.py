@@ -245,8 +245,8 @@ class decoders:
 		### HTTP GET TFTP Command
 		self.log("compiling http embedded tftp command", 0, "info")
 		self.decodersDict['cmdtftp'] = re.compile('GET /scripts/.*?/cmd.exe.*?tftp.*?%20([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})%20GET%20(.*?)%20.*?HTTP/1\.')
-	
-        ### Metsploit payload generic/shell_reverse_tcp for some php-based exploits
+
+		### Metsploit payload generic/shell_reverse_tcp for certain php-based exploits
 		self.log("compiling Metasploit payload generic/shell_reverse_tcp for some php-based exploits", 0, "info")
 		#self.decodersDict['php_connback_generic'] = re.compile('.*base64_decode\(\'(.*)\'\).*', re.S)
 		self.decodersDict['php_connback_generic'] = re.compile('.*base64_decode\((.*?)\).*', re.S)
