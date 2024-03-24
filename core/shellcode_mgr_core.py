@@ -22,6 +22,7 @@ from os import path as ospath
 from socket import inet_ntoa
 from struct import pack, unpack
 from base64 import decodestring, b64encode, b64decode
+from urllib import unquote
 
 from sys import exit, stdout
 from StringIO import StringIO
@@ -791,36 +792,47 @@ class shell_mgr:
 				dec_shellcode = self.decrypt_xor(key, self.shellcode)
 				if self.handle_bergheim(key, dec_shellcode):
 					return True
-		        ### Match Metsploit payload generic/shell_reverse_tcp for exploit multi/http/php_cgi_arg_injection
-		        if self.displayShellCode:
-				print "starting php_cgi_arg_injection connback matching ..."
+			### Match Metsploit payload generic/shell_reverse_tcp for some php-based exploits
+			if self.displayShellCode:
+				print "starting php-based connback shellcode matching ..."
 				stdout.flush()
-			match = self.decodersDict['php_cgi_arg_injection_connback'].search( self.shellcode2 )
+			match = self.decodersDict['php_connback_generic'].search( self.shellcode2 )
+			match1 = self.decodersDict['php_connback_generic1'].search( self.shellcode2 )
+			match2 = self.decodersDict['php_connback_generic2'].search( self.shellcode2 )
+			match3 = self.decodersDict['php_connback_generic3'].search( self.shellcode2 )
+			match4 = self.decodersDict['php_connback_generic4'].search( self.shellcode2 )
+			#match = False;
+			if match1:
+				encoded = match1.groups()[0]
+				dec_shellcode = b64decode(encoded)
+				if self.handle_phpbased_shellcode(dec_shellcode):
+					return True 	
+			if match2:
+				encoded = match2.groups()[0]
+				dec_shellcode = b64decode(encoded)
+				if self.handle_phpbased_shellcode(dec_shellcode):
+					return True 	
+			if match3:
+				encoded = match3.groups()[0]
+				dec_shellcode = unquote(encoded)
+				if self.handle_phpbased_shellcode(dec_shellcode):
+					return True 		                        		                        		
+			if match4:
+				encoded = match4.groups()[0]
+				dec_shellcode = b64decode(encoded)
+				if self.handle_phpbased_shellcode(dec_shellcode):
+						return True 
 			if match:
-			        encoded = match.groups()[0]
-			        decoded = b64decode(encoded).decode()
-			        match = self.decodersDict['php_cgi_arg_injection_connback_base64'].search(decoded)
-			        if match:
-			        	ip = match.groups()[0]
-					if self.replace_locals and self.check_local(ip):
-						ip = self.attIP
-					elif self.check_local(ip):
-						self.resultSet['isLocalIP'] = True
-					port = match.groups()[1]
-					self.log_obj.log("found phpcgiarginjection connectback shellcode (port: %s, ip: %s)" % (port, ip), 9, "info", False, True)
-					dlident = "%s%s" % (ip.replace('.',''), port)
-					self.resultSet['dlident'] = dlident
-					self.resultSet['result'] = True
-					self.resultSet['host'] = ip
-					self.resultSet['port'] = port
-					self.resultSet['found'] = "connbackshell"
-					cbackURL = "cbacks://%s:%s/" % (ip, port)
-					self.resultSet['displayURL'] = cbackURL
-					self.resultSet['shellcodeName'] = "phpcgiarginjection_connback"
-					return True
-		        ### Match Metsploit payload generic/shell_reverse_tcp for exploit/windows/backupexec/name_service
-		        if self.displayShellCode:
-				print "starting veritas connback matching ..."
+				try:
+					encoded = match.groups()[0]
+					dec_shellcode = b64decode(encoded)
+					if self.handle_phpbased_shellcode(dec_shellcode):
+						return True 
+				except Exception as e:
+						pass
+			### Match Metsploit payload generic/shell_reverse_tcp for exploit/windows/backupexec/name_service
+			if self.displayShellCode:
+				print "starting veritas connback shellcode matching ..."
 				stdout.flush()
 			match = self.decodersDict['veritas_connback'].search( self.shellcode2 )
 			if match:
@@ -845,6 +857,33 @@ class shell_mgr:
 				self.resultSet['displayURL'] = cbackURL
 				self.resultSet['shellcodeName'] = "veritas_connback"
 				return True
+			### Match unknown reverse shell shellcode
+			if self.displayShellCode:
+			    print "starting unknown connback shellcode matching ..."
+			    stdout.flush()
+			match = self.decodersDict['unknown_connback'].search( self.shellcode2 )
+			if match:
+				raw_ip = match.groups()[0]
+				ip = unpack('I',raw_ip)[0]
+				ip = pack('I',ip)
+				ip = inet_ntoa(ip)
+				raw_port = match.groups()[1]
+				port = unpack('!H',raw_port)[0]
+				if self.replace_locals and self.check_local(ip):
+					ip = self.attIP
+				elif self.check_local(ip):
+					self.resultSet['isLocalIP'] = True
+				self.log_obj.log("found unknown connectback shellcode (port: %s, ip: %s)" % (port, ip), 9, "info", False, True)
+				dlident = "%s%s" % (ip.replace('.',''), port)
+				self.resultSet['dlident'] = dlident
+				self.resultSet['result'] = True
+				self.resultSet['host'] = ip
+				self.resultSet['port'] = port
+				self.resultSet['found'] = "connbackshell"
+				cbackURL = "cbacks://%s:%s/" % (ip, port)
+				self.resultSet['displayURL'] = cbackURL
+				self.resultSet['shellcodeName'] = "unknown_connback"
+				return True			
 			### End
 			self.resultSet['result'] = False
 		except KeyboardInterrupt:
@@ -1834,6 +1873,59 @@ class shell_mgr:
 			self.resultSet['displayURL'] = connbackURL
 			self.resultSet['shellcodeName'] = "lichtenfels"
 			return True
+		return False
+
+	def handle_phpbased_shellcode(self, dec_shellcode):
+		"""certain php-based shellcodes
+
+		Keyword arguments:
+		dec_shellcode -- already decoded shellcode
+
+		"""
+		m = self.decodersDict['php_connback'].search(dec_shellcode)
+		# base64 decoding only once
+		if m:
+			ip = m.groups()[0]
+			port = m.groups()[1]
+			if self.replace_locals and self.check_local(ip):
+				ip = self.attIP
+			elif self.check_local(ip):
+				self.resultSet['isLocalIP'] = True
+			self.log_obj.log("found phpcgiarginjection connectback shellcode (port: %s, ip: %s)" % (port, ip), 9, "info", False, True)
+			dlident = "%s%s" % (ip.replace('.',''), port)
+			self.resultSet['dlident'] = dlident
+			self.resultSet['result'] = True
+			self.resultSet['host'] = ip
+			self.resultSet['port'] = port
+			self.resultSet['found'] = "connbackshell"
+			cbackURL = "cbacks://%s:%s/" % (ip, port)
+			self.resultSet['displayURL'] = cbackURL
+			self.resultSet['shellcodeName'] = "php_cgi_arg_injection_connback"
+			return True
+		else:
+			m = self.decodersDict['php_connback_generic'].search(dec_shellcode)
+			if m:
+				encoded = m.groups()[0]
+				decoded = b64decode(encoded)
+				match = self.decodersDict['php_connback'].search(decoded)
+			if match:
+				ip = match.groups()[0]
+				port = match.groups()[1]				
+				if self.replace_locals and self.check_local(ip):
+					ip = self.attIP
+				elif self.check_local(ip):
+					self.resultSet['isLocalIP'] = True
+				self.log_obj.log("found php-based twice-encoded connectback shellcode (port: %s, ip: %s)" % (port, ip), 9, "info", False, True)
+				dlident = "%s%s" % (ip.replace('.',''), port)
+				self.resultSet['dlident'] = dlident
+				self.resultSet['result'] = True
+				self.resultSet['host'] = ip
+				self.resultSet['port'] = port
+				self.resultSet['found'] = "connbackshell"
+				cbackURL = "cbacks://%s:%s/" % (ip, port)
+				self.resultSet['displayURL'] = cbackURL
+				self.resultSet['shellcodeName'] = "encoded_twice_phpconnback"
+				return True		
 		return False
 
 	def write_hexdump(self, shellcode=None, extension=None, ownPort="None"):
