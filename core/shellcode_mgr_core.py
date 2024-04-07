@@ -1908,24 +1908,24 @@ class shell_mgr:
 				encoded = m.groups()[0]
 				decoded = b64decode(encoded)
 				match = self.decodersDict['php_connback'].search(decoded)
-			if match:
-				ip = match.groups()[0]
-				port = match.groups()[1]				
-				if self.replace_locals and self.check_local(ip):
-					ip = self.attIP
-				elif self.check_local(ip):
-					self.resultSet['isLocalIP'] = True
-				self.log_obj.log("found php-based twice-encoded connectback shellcode (port: %s, ip: %s)" % (port, ip), 9, "info", False, True)
-				dlident = "%s%s" % (ip.replace('.',''), port)
-				self.resultSet['dlident'] = dlident
-				self.resultSet['result'] = True
-				self.resultSet['host'] = ip
-				self.resultSet['port'] = port
-				self.resultSet['found'] = "connbackshell"
-				cbackURL = "cbacks://%s:%s/" % (ip, port)
-				self.resultSet['displayURL'] = cbackURL
-				self.resultSet['shellcodeName'] = "encoded_twice_phpconnback"
-				return True		
+				if match:
+					ip = match.groups()[0]
+					port = match.groups()[1]				
+					if self.replace_locals and self.check_local(ip):
+						ip = self.attIP
+					elif self.check_local(ip):
+						self.resultSet['isLocalIP'] = True
+					self.log_obj.log("found php-based twice-encoded connectback shellcode (port: %s, ip: %s)" % (port, ip), 9, "info", False, True)
+					dlident = "%s%s" % (ip.replace('.',''), port)
+					self.resultSet['dlident'] = dlident
+					self.resultSet['result'] = True
+					self.resultSet['host'] = ip
+					self.resultSet['port'] = port
+					self.resultSet['found'] = "connbackshell"
+					cbackURL = "cbacks://%s:%s/" % (ip, port)
+					self.resultSet['displayURL'] = cbackURL
+					self.resultSet['shellcodeName'] = "encoded_twice_phpconnback"
+					return True		
 		return False
 
 	def write_hexdump(self, shellcode=None, extension=None, ownPort="None"):
