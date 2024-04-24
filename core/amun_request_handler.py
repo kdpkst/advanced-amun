@@ -28,6 +28,7 @@ import os
 import random
 import struct
 import subprocess
+import time
 from copy import copy
 
 
@@ -138,6 +139,7 @@ class amun_reqhandler(asynchat.async_chat):
                                    vuln_modules, divLogger, addr):
         """ handles incoming connections at first and inits all objects """
         asynchat.async_chat.__init__(self, socket_object)
+        self.start_time = time.time()
         self.socket_object = socket_object
         self.divLogger = divLogger
         self.shellcode_manager = shellcode_mgr_core.shell_mgr(decodersDict, divLogger['shellcode'], config_dict)
@@ -192,7 +194,7 @@ class amun_reqhandler(asynchat.async_chat):
         conffile = "conf/amun.conf"
         config = amun_config_parser.AmunConfigParser(conffile)
         telnet_port = int(config.getSingleValue("vuln-check"))
-        if self.enableProxy and self.own_port == telnet_port:
+        if self.enableProxy == 1 and self.own_port == telnet_port:
             conn = self.setup_remote_connection()
             if conn:
                 self.log_obj.log("get welcome banner from backend decoy %s " % (self.backendIP), 6, "debug",
@@ -300,7 +302,7 @@ class amun_reqhandler(asynchat.async_chat):
             conffile = "conf/amun.conf"
             config = amun_config_parser.AmunConfigParser(conffile)
             telnet_port = int(config.getSingleValue("vuln-check"))
-            if self.enableProxy and self.own_port == telnet_port:
+            if self.enableProxy == 1 and self.own_port == telnet_port:
                 if data.strip() == "exit":
                     self.handle_close()
                 elif not hasattr(self, 'origin_socket'):
@@ -317,7 +319,7 @@ class amun_reqhandler(asynchat.async_chat):
                 else:
                     ### create new connection
                     vuln_modulList = self.set_existing_connection()
-                    ### set initial state
+                ### set initial state
                 state = "amun_not_set"
                 ### handle vulnerabilities
                 (result, state) = self.handle_vulnerabilities(data, vuln_modulList)
@@ -332,7 +334,7 @@ class amun_reqhandler(asynchat.async_chat):
                         connback_ip = resultSet['host']
                         connback_port = str(resultSet['port'])
                         subprocess.Popen(["./reverseshell_spoofing/create_container.sh", connback_ip, connback_port])
-                
+
                 try:
                     #if len(result['replies'])>0:
                     for index in range(0, len(result['replies'])):
@@ -355,7 +357,7 @@ class amun_reqhandler(asynchat.async_chat):
                             return
                 except:
                     pass
-
+			
                 ### connection finished but modules left
                 if len(vuln_modulList) > 0 and len(data) <= 0:
                     for key in vuln_modulList.keys():
@@ -367,6 +369,7 @@ class amun_reqhandler(asynchat.async_chat):
                         del vuln_modulList[key]
                     if self.event_dict['initial_connections'].has_key(self.identifier):
                         del self.event_dict['initial_connections'][self.identifier]
+                
                 ### modules left?
                 if len(vuln_modulList) <= 0:
                     if self.verboseLogging:
@@ -388,6 +391,13 @@ class amun_reqhandler(asynchat.async_chat):
                         pass
                     self.delete_existing_connection()
                     try:
+                        end_time = time.time()
+                        if self.own_port == telnet_port:
+                            session_duration = end_time - self.start_time
+                            log_file = "./shell_session_logs/session_duration_%s.log" % (time.strftime("%Y-%m-%d"))
+                            with open(log_file, "a") as f:
+                                  log_message = "Telnet Session Duration (IP: %s): %.1f(s)\n" % (self.remote_ip, session_duration)
+                                  f.write(log_message)
                         self.shutdown(socket.SHUT_RDWR)
                     except:
                         pass
