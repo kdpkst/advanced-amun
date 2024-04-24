@@ -332,7 +332,30 @@ class amun_reqhandler(asynchat.async_chat):
                         connback_ip = resultSet['host']
                         connback_port = str(resultSet['port'])
                         subprocess.Popen(["./reverseshell_spoofing/create_container.sh", connback_ip, connback_port])
-			
+                
+                try:
+                    #if len(result['replies'])>0:
+                    for index in range(0, len(result['replies'])):
+                        reply_message = result['replies'][index]
+                        ### calc reply message length
+                        bytesTosend = len(reply_message)
+                        try:
+                            while bytesTosend>0:
+                                bytes_send = self.socket_object.send(reply_message)
+                                bytesTosend = bytesTosend - bytes_send
+                        except socket.error, e:
+                            ### client gone
+                            self.delete_existing_connection()
+                            try:
+                                self.shutdown(socket.SHUT_RDWR)
+                            except:
+                                pass
+                            self.connected = False
+                            self.close()
+                            return
+                except:
+                    pass
+
                 ### connection finished but modules left
                 if len(vuln_modulList) > 0 and len(data) <= 0:
                     for key in vuln_modulList.keys():
