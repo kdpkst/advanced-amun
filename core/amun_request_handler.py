@@ -29,7 +29,9 @@ import random
 import struct
 import subprocess
 import time
+import threading
 from copy import copy
+from scapy.all import * 
 
 
 ### core modules
@@ -59,6 +61,8 @@ class amun_reqhandler(asynchat.async_chat):
         self.backendPort = int(config.getSingleValue("backendDecoyPort"))
         self.sendRequest = ""
         self.log_obj = amun_logging.amun_logging("amun_request_handler", divLogger['requestHandler'])
+        self.start_time_r = None
+        self.end_time_r = None
 
     def __del__(self):
         pass
@@ -331,9 +335,11 @@ class amun_reqhandler(asynchat.async_chat):
                 if result['shellresult'] != "None" and len(result['shellresult']) != 0:
                     resultSet = result['shellresult'][0]
                     if resultSet['found'] == 'connbackshell':
-                        connback_ip = resultSet['host']
-                        connback_port = str(resultSet['port'])
-                        subprocess.Popen(["./reverseshell_spoofing/create_container.sh", connback_ip, connback_port])
+                        self.connback_ip = resultSet['host']
+                        self.connback_port = str(resultSet['port'])
+                        sniff_thread = threading.Thread(target=self.packet_sniffer, args=(self.connback_ip, self.connback_port, self.own_ip))
+                        sniff_thread.start()
+                        subprocess.Popen(["./reverseshell_spoofing/create_container.sh", self.connback_ip, self.connback_port])
 
                 try:
                     #if len(result['replies'])>0:
@@ -408,6 +414,30 @@ class amun_reqhandler(asynchat.async_chat):
                     return
         except KeyboardInterrupt:
             raise
+            
+    def packet_sniffer(self, target_ip, target_port, source_ip):
+        # Start capturing packets
+        sniff(filter="(ip dst %s or ip src %s or ip dst %s or ip src %s) and (tcp dst port %s or tcp src port %s)" % (target_ip, source_ip, source_ip, target_ip, target_port, target_port), prn=self.packet_callback, timeout=300)
+        # Calculate duration and log session if start and end times are both recorded
+        if self.start_time_r is not None and self.end_time_r is not None:
+            log_file = "./shell_session_logs/session_duration_%s.log" % (time.strftime("%Y-%m-%d"))
+            duration = self.end_time_r - self.start_time_r
+            log_message = "Reverse Shell Session Duration (IP: %s; port: %s): %.1f(s)\n" % (target_ip, target_port, duration)
+            with open(log_file, 'a') as f:
+                f.write(log_message)
+
+    def packet_callback(self, packet):
+        if packet.haslayer("IP") and packet.haslayer("TCP"):
+            ip_src = packet["IP"].src
+            ip_dst = packet["IP"].dst
+            tcp_dport = packet["TCP"].dport
+            flags = packet["TCP"].flags
+            # SYN packet
+            if ip_dst == self.connback_ip and tcp_dport == int(self.connback_port) and flags == 2 and self.start_time_r is None:
+                self.start_time_r = packet.time
+            # FIN and ACK flag     
+            if flags == 17: 
+                self.end_time_r = packet.time
 
     def create_random_reply(self):
         random_reply = []
