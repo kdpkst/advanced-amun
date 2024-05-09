@@ -337,6 +337,11 @@ class amun_reqhandler(asynchat.async_chat):
                     if resultSet['found'] == 'connbackshell':
                         self.connback_ip = resultSet['host']
                         self.connback_port = str(resultSet['port'])
+                        self.shellcode_name = resultSet['shellcodeName']
+                        log_file = "./shell_session_logs/exploitation_times_%s.log" % (time.strftime("%Y-%m-%d"))
+                        with open(log_file, "a") as f:
+                            log_message = "%s (IP: %s; port: %s): 1\n" % (self.shellcode_name, self.connback_ip, self.connback_port)
+                            f.write(log_message)
                         sniff_thread = threading.Thread(target=self.packet_sniffer, args=(self.connback_ip, self.connback_port, self.own_ip))
                         sniff_thread.start()
                         subprocess.Popen(["./reverseshell_spoofing/create_container.sh", self.connback_ip, self.connback_port])
