@@ -1,8 +1,6 @@
 # Advanced Amun Honeypot
 **Advanced Amun Honeypot** is an extended and enhanced version of the original Amun Honeypot. You can find Amun honeypot here https://github.com/zeroq/amun  
 Limitations of original Amun:
-- ...
-- ...
 
 ## Requirements
 - 2.6 <= Python < 3
