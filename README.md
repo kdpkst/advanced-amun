@@ -7,6 +7,7 @@ Limitations of original Amun:
 ## Requirements
 - 2.6 <= Python < 3
 - Docker
+- scapy 2.3.3
 
 ## Features Extended
 - **Proxy Mode**: enable Amun to be a proxy to forward attacking data to a backend machine, and forward the real response from the backend decoy to the attacker.
